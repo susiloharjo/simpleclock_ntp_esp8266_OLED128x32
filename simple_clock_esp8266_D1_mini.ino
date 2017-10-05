@@ -94,8 +94,8 @@ void loop()
 
   // dht init and thingspeak
 
-  float hum = dht.readHumidity() ;
-  float temp = dht.readTemperature();
+  float hum = dht.readHumidity() -1 ;
+  float temp = dht.readTemperature() -1 ;
   if (isnan(hum) || isnan(temp)) {
     Serial.println("Failed to read from DHT sensor!");
     return;

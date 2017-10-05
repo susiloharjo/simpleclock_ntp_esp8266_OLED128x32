@@ -94,8 +94,8 @@ void loop()
 
   // dht init and thingspeak
 
-  float hum = dht.readHumidity() - 3;
-  float temp = dht.readTemperature() - 3;
+  float hum = dht.readHumidity() ;
+  float temp = dht.readTemperature();
   if (isnan(hum) || isnan(temp)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
@@ -149,8 +149,8 @@ void loop()
     utc = epochTime;
 
     // Then convert the UTC UNIX timestamp to local time
-    TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, +420};
-    TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, +480};
+    TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, +360}; 
+    TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, +420};
     Timezone usEastern(usEDT, usEST);
     local = usEastern.toLocal(utc);
 
@@ -188,16 +188,9 @@ void loop()
     display.drawStringMaxWidth(64, 33, 128, "Clock");
     display.display();
     // print the date and time on the OLED
-    delay(5000);
-    
-    display.clear();
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.setFont(ArialMT_Plain_24);
-    display.drawStringMaxWidth(64, 10, 128, t);
-    display.setFont(ArialMT_Plain_10);
-    display.drawStringMaxWidth(64, 38, 128, date);
-    display.display();
-    delay(5000);
+    delay(2000);
+
+     //begin show temp
     
     suhu = String(temp);
     lembap = String(hum);
@@ -210,7 +203,6 @@ void loop()
     display.drawStringMaxWidth(64, 15, 128, suhu + " C");
   
     
-      
     display.setFont(ArialMT_Plain_10);
     display.drawStringMaxWidth(64, 33, 128, "Humidity");
     display.setFont(ArialMT_Plain_16);
@@ -219,6 +211,17 @@ void loop()
     display.display();
     // print the date and time on the OLED
     delay(5000);
+    
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_24);
+    display.drawStringMaxWidth(64, 10, 128, t);
+    display.setFont(ArialMT_Plain_10);
+    display.drawStringMaxWidth(64, 38, 128, date);
+    display.display();
+    delay(5000);
+    
+   
 
     
   }
@@ -233,5 +236,5 @@ void loop()
     delay(1000);
   }
     
-  delay(60000);    //Send a request to update every 10 sec (= 10,000 ms)
+  delay(30000);    //Send a request to update every 10 sec (= 10,000 ms)
 }

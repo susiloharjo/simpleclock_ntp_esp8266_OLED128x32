@@ -12,7 +12,7 @@
 // Vin goes to 3.3V
 // Data to I2C SDA (GPIO 0)
 // Clk to I2C SCL (GPIO 2)
-
+#include <DHT.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <string.h>
@@ -23,6 +23,8 @@
 #include <Time.h>
 #include <TimeLib.h>
 #include <Timezone.h>
+
+#include "OLEDDisplayUi.h"
 
 // Define NTP properties
 #define NTP_OFFSET   60 * 60      // In seconds
@@ -43,7 +45,17 @@ String t;
 const char * days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"} ;
 const char * months[] = {"Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"} ;
 const char * ampm[] = {"AM", "PM"} ;
- 
+
+String suhu; 
+String lembap ;
+
+//tem and thingspeak init
+String apiKey = "GVYYZ8JOK5X4ZY73";
+const char* server = "api.thingspeak.com";
+#define DHTPIN D3 // what pin we're connected to
+DHT dht(DHTPIN, DHT11,15);
+WiFiClient client;
+
 void setup () 
 {
   Serial.begin(115200); // most ESP-01's use 115200 but this could vary
@@ -52,7 +64,7 @@ void setup ()
   Wire.pins(D1,D2);// Start the OLED with GPIO 0 and 2 on ESP-01
   Wire.begin(D1,D2);
   display.init();
-  display.flipScreenVertically();   
+//  display.flipScreenVertically();   
 
   // Connect to wifi
   Serial.println("");
@@ -78,7 +90,53 @@ void setup ()
 void loop() 
 {
   if (WiFi.status() == WL_CONNECTED) //Check WiFi connection status
-  {   
+  { 
+
+  // dht init and thingspeak
+
+  float hum = dht.readHumidity() - 3;
+  float temp = dht.readTemperature() - 3;
+  if (isnan(hum) || isnan(temp)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  if (client.connect(server,80)) {  //   "184.106.153.149" or api.thingspeak.com
+    String postStr = apiKey;
+           postStr +="&field1=";
+           postStr += String(temp);
+           postStr +="&field2=";
+           postStr += String(hum);
+           postStr += "\r\n\r\n";
+
+     client.print("POST /update HTTP/1.1\n");
+     client.print("Host: api.thingspeak.com\n");
+     client.print("Connection: close\n");
+     client.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
+     client.print("Content-Type: application/x-www-form-urlencoded\n");
+     client.print("Content-Length: ");
+     client.print(postStr.length());
+     client.print("\n\n");
+     client.print(postStr);
+
+
+     Serial.print("Temperature: ");
+     Serial.print(temp);
+     Serial.print(" degrees Celcius Humidity: ");
+     Serial.print(hum);
+     Serial.println("% send to Thingspeak");
+  }
+  client.stop();
+
+  Serial.println("Waiting...");
+  // thingspeak needs minimum 15 sec delay between updates
+//  delay(60000);
+
+  //end thingspeak 
+      
+
+
+      
     date = "";  // clear the variables
     t = "";
     
@@ -121,8 +179,17 @@ void loop()
     Serial.println("");
     Serial.print("Local time: ");
     Serial.print(t);
-
+//    delay(3000);
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_24);
+    display.drawStringMaxWidth(64, 8, 128, "Susiloharjo");
+    display.setFont(ArialMT_Plain_16);
+    display.drawStringMaxWidth(64, 33, 128, "Clock");
+    display.display();
     // print the date and time on the OLED
+    delay(5000);
+    
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_24);
@@ -130,6 +197,30 @@ void loop()
     display.setFont(ArialMT_Plain_10);
     display.drawStringMaxWidth(64, 38, 128, date);
     display.display();
+    delay(5000);
+    
+    suhu = String(temp);
+    lembap = String(hum);
+    
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_10);
+    display.drawStringMaxWidth(64, 0, 128, "Temperature");
+    display.setFont(ArialMT_Plain_16);
+    display.drawStringMaxWidth(64, 15, 128, suhu + " C");
+  
+    
+      
+    display.setFont(ArialMT_Plain_10);
+    display.drawStringMaxWidth(64, 33, 128, "Humidity");
+    display.setFont(ArialMT_Plain_16);
+    display.drawStringMaxWidth(64, 45, 128, lembap + "%");
+    
+    display.display();
+    // print the date and time on the OLED
+    delay(5000);
+
+    
   }
   else // attempt to connect to wifi again if disconnected
   {
@@ -142,5 +233,5 @@ void loop()
     delay(1000);
   }
     
-  delay(10000);    //Send a request to update every 10 sec (= 10,000 ms)
+  delay(60000);    //Send a request to update every 10 sec (= 10,000 ms)
 }

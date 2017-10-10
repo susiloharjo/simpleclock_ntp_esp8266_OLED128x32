@@ -42,7 +42,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 
 // Create a display object
-SSD1306  display(0x3c,D7, D6); //0x3d for the Adafruit 1.3" OLED, 0x3C being the usual address of the OLED
+SSD1306  display(0x3c,D6, D7); //0x3d for the Adafruit 1.3" OLED, 0x3C being the usual address of the OLED
  
 //const char* ssid = "mnmkn";   // insert your own ssid 
 //const char* password = "user.100";              // and password
@@ -71,34 +71,15 @@ void setup ()
   Serial.begin(115200); // most ESP-01's use 115200 but this could vary
   timeClient.begin();   // Start the NTP UDP client
 
-  Wire.pins(D6,D6);// Start the OLED with GPIO 0 and 2 on ESP-01
+  Wire.pins(D6,D7);// Start the OLED with GPIO 0 and 2 on ESP-01
   Wire.begin(D6,D7);
   display.init();
 //  display.flipScreenVertically();   
 
-  // Connect to wifi
-//  Serial.println("");
-//  Serial.print("Connecting to ");
-//  Serial.print(ssid);
-//  display.drawString(0, 10, "Connecting to Wifi...");
-//  display.display();
-//  WiFi.begin(ssid, password);
-//  while (WiFi.status() != WL_CONNECTED) 
-//  {
-//    delay(500);
-//    Serial.print(".");
-//  }
-//  Serial.println("");
-//  Serial.print("Connected to WiFi at ");
-//  Serial.print(WiFi.localIP());
-//  Serial.println("");
-//  display.drawString(0, 24, "Connected.");
-//  display.display();
-//  delay(1000);
- wifi_station_set_hostname("susiloharjo_clock");
+ 
 
 WiFiManager wifiManager;
- wifiManager.autoConnect("AutoConnectAP");
+wifiManager.autoConnect("susiloharjo's clock");
   Serial.println("");
   Serial.print("Connected to WiFi at ");
   Serial.print(WiFi.localIP());
@@ -117,8 +98,8 @@ void loop()
 
   // dht init and thingspeak
 
-  float hum = dht.readHumidity() -1 ;
-  float temp = dht.readTemperature() -1 ;
+  float hum = dht.readHumidity();
+  float temp = dht.readTemperature() ;
   if (isnan(hum) || isnan(temp)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
@@ -254,7 +235,7 @@ void loop()
     display.drawString(0, 10, "Connecting to Wifi...");
     display.display();
     WiFiManager wifiManager;
-     wifiManager.autoConnect("AutoConnectAP");
+    wifiManager.autoConnect("susiloharjo's clock");
  
     display.drawString(0, 24, "Connected.");
     display.display();
